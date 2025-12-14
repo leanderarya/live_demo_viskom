@@ -96,7 +96,26 @@ def load_model():
 def get_overlay_mask(h, w):
     mask = np.zeros((h, w, 3), dtype=np.uint8)
     center = (int(w/2), int(h/2))
-    axes = (int(w*0.22), int(h*0.38)) 
+    
+    # --- PERBAIKAN LOGIKA ANTI-GEPENG ---
+    # 1. Cari sisi terpendek dari layar (agar oval selalu muat)
+    min_dim = min(w, h)
+    
+    # 2. Tentukan ukuran dasar oval (misal 40% dari sisi terpendek)
+    base_radius = int(min_dim * 0.4)
+    
+    # 3. Paksa Rasio Wajah 3:4 (Lebar = 75% dari Tinggi)
+    # Ini menjamin oval tetap berbentuk wajah manusia, bukan lonjong aneh
+    radius_y = int(base_radius * 1.2) # Tinggi sedikit dilebihkan
+    radius_x = int(base_radius * 0.9) # Lebar sedikit dikurangi
+    
+    # Pastikan radius tidak melebihi batas layar (Safety Check)
+    radius_x = min(radius_x, int(w/2) - 10)
+    radius_y = min(radius_y, int(h/2) - 10)
+    
+    axes = (radius_x, radius_y)
+    # ------------------------------------
+    
     cv2.ellipse(mask, center, axes, 0, 0, 360, (255, 255, 255), -1)
     mask_inv = cv2.bitwise_not(mask)
     return mask, mask_inv, center, axes
